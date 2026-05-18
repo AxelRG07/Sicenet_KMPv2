@@ -20,6 +20,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
 
     implementation(libs.compose.uiToolingPreview)
+    implementation(libs.androidx.sqlite.bundled)
     debugImplementation(libs.compose.uiTooling)
 
 }

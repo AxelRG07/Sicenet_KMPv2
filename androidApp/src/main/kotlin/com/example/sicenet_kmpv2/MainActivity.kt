@@ -3,28 +3,28 @@ package com.example.sicenet_kmpv2
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.sicenet_kmpv2.data.repository.SicenetRepository
-import com.example.sicenet_kmpv2.network.sicenetHttpClient
+import androidx.room3.Room
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import com.example.sicenet_kmpv2.data.local.SicenetDatabase
 import com.example.sicenet_kmpv2.ui.screens.SicenetApp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
+        val appContext = applicationContext
+        val dbFile = appContext.getDatabasePath("sicenet.db")
+        val db = Room.databaseBuilder<SicenetDatabase>(
+            context = appContext,
+            name = dbFile.absolutePath
+        ).setDriver(BundledSQLiteDriver())
+
+        val syncManager = AndroidSyncManager(appContext)
+
+        AppContainer.inicializar(db, syncManager)
+
         setContent {
-            SicenetApp(
-                repository = SicenetRepository(sicenetHttpClient)
-            )
+            SicenetApp(repository = AppContainer.repository)
         }
     }
-}
-
-@Preview
-@Composable
-fun AppAndroidPreview() {
-    App()
 }

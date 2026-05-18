@@ -19,6 +19,9 @@ ktor = "3.0.3"
 ksp = "2.3.7"
 room3 = "3.0.0-alpha01"  # O la versión 3.0 estable/alfa más reciente que utilices
 sqlite = "2.5.0-alpha11"
+kotlinx-datetime = "0.6.1"
+sqliteBundledJvm = "2.6.2"
+sqliteBundled = "2.6.2"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -47,6 +50,9 @@ ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx
 room3-runtime = { module = "androidx.room3:room3-runtime", version.ref = "room3" }
 room3-compiler = { module = "androidx.room3:room3-compiler", version.ref = "room3" }
 sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
+androidx-sqlite-bundled-jvm = { group = "androidx.sqlite", name = "sqlite-bundled-jvm", version.ref = "sqliteBundledJvm" }
+androidx-sqlite-bundled = { group = "androidx.sqlite", name = "sqlite-bundled", version.ref = "sqliteBundled" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

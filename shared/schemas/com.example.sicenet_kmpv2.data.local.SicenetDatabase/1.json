@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "997b9d4ff7774ec0289e1274df324c7b",
+    "identityHash": "3bb579e2ada5438b4f6d950e1fa50f82",
     "entities": [
       {
-        "tableName": "datos_academicos",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`idDato` TEXT NOT NULL, `jsonContent` TEXT NOT NULL, `lastUpdated` INTEGER NOT NULL, PRIMARY KEY(`idDato`))",
+        "tableName": "cache_academico",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`idDato` TEXT NOT NULL, `contenidoXml` TEXT NOT NULL, `timestampActualizacion` INTEGER NOT NULL, PRIMARY KEY(`idDato`))",
         "fields": [
           {
             "fieldPath": "idDato",
@@ -15,14 +15,14 @@
             "notNull": true
           },
           {
-            "fieldPath": "jsonContent",
-            "columnName": "jsonContent",
+            "fieldPath": "contenidoXml",
+            "columnName": "contenidoXml",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "lastUpdated",
-            "columnName": "lastUpdated",
+            "fieldPath": "timestampActualizacion",
+            "columnName": "timestampActualizacion",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -37,7 +37,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '997b9d4ff7774ec0289e1274df324c7b')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3bb579e2ada5438b4f6d950e1fa50f82')"
     ]
   }
 }

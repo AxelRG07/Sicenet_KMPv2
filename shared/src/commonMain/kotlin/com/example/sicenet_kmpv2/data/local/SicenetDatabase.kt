@@ -3,26 +3,26 @@ package com.example.sicenet_kmpv2.data.local
 import androidx.room3.*
 import kotlinx.coroutines.flow.Flow
 
-@Entity(tableName = "datos_academicos")
-data class DatoAcademicoEntity(
+@Entity(tableName = "cache_academico")
+data class CacheAcademicoEntity(
     @PrimaryKey val idDato: String,
-    val jsonContent: String,
-    val lastUpdated: Long
+    val contenidoXml: String,
+    val timestampActualizacion: Long
 )
 
 @Dao
 interface SicenetDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun guardarDato(dato: DatoAcademicoEntity)
+    suspend fun guardarCache(cache: CacheAcademicoEntity)
 
-    @Query("SELECT * FROM datos_academicos WHERE idDato = :id")
-    fun observarDato(id: String): Flow<DatoAcademicoEntity?>
+    @Query("SELECT * FROM cache_academico WHERE idDato = :idDato")
+    fun observarCache(idDato: String): Flow<CacheAcademicoEntity?>
 
-    @Query("SELECT * FROM datos_academicos WHERE idDato = :id")
-    suspend fun obtenerDatoSync(id: String): DatoAcademicoEntity?
+    @Query("SELECT * FROM cache_academico WHERE idDato = :idDato")
+    suspend fun obtenerCacheSync(idDato: String): CacheAcademicoEntity?
 }
 
-@Database(entities = [DatoAcademicoEntity::class], version = 1)
+@Database(entities = [CacheAcademicoEntity::class], version = 1)
 abstract class SicenetDatabase : RoomDatabase() {
     abstract fun sicenetDao(): SicenetDao
 }

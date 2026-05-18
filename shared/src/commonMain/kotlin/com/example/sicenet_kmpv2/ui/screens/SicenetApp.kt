@@ -1,6 +1,10 @@
 package com.example.sicenet_kmpv2.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -8,8 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.sicenet_kmpv2.AppContainer
 import com.example.sicenet_kmpv2.data.repository.SicenetRepository
 import com.example.sicenet_kmpv2.domain.PerfilAcademico
+import com.example.sicenet_kmpv2.ui.SicenetViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -21,7 +27,45 @@ fun SicenetApp(repository: SicenetRepository) {
             isAuthenticated = true
         }
     } else {
-        ProfileScreen(repository)
+        MainDashboard()
+    }
+}
+
+@Composable
+fun MainDashboard(viewModel: SicenetViewModel = SicenetViewModel()) {
+    var pantallaActual by remember { mutableStateOf("perfil") }
+
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.AccountCircle, contentDescription = "Perfil") },
+                    label = { Text("Perfil") },
+                    selected = pantallaActual == "perfil",
+                    onClick = { pantallaActual = "perfil" }
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.DateRange, contentDescription = "Carga") },
+                    label = { Text("Carga") },
+                    selected = pantallaActual == "carga",
+                    onClick = { pantallaActual = "carga" }
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.List, contentDescription = "Kardex") },
+                    label = { Text("Kardex") },
+                    selected = pantallaActual == "kardex",
+                    onClick = { pantallaActual = "kardex" }
+                )
+            }
+        }
+    ) { paddingValues ->
+        Box(modifier = Modifier.padding(paddingValues)) {
+            when (pantallaActual) {
+                "perfil" -> ProfileScreen(AppContainer.repository)
+                "carga" -> CargaAcademicaScreen(viewModel)
+                "kardex" -> KardexScreen(viewModel)
+            }
+        }
     }
 }
 
@@ -134,15 +178,15 @@ fun ProfileScreen(repository: SicenetRepository) {
 
                     Divider(modifier = Modifier.padding(vertical = 16.dp))
 
-                    Text("Carrera", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                    Text(perfil!!.carrera, style = MaterialTheme.typography.bodyLarge)
+                    Text("Carrera", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(8.dp))
+                    Text(perfil!!.carrera, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(8.dp))
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    Text("Especialidad", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                    Text(perfil!!.especialidad, style = MaterialTheme.typography.bodyLarge)
+                    Text("Especialidad", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(8.dp))
+                    Text(perfil!!.especialidad, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(8.dp))
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.SpaceBetween, ) {
                         Column {
                             Text("Semestre", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                             Text(perfil!!.semestre, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)

@@ -51,13 +51,16 @@ kotlin {
             dependencies {
                 api("io.ktor:ktor-client-core:$ktor_version")
                 api(libs.room3.runtime)
-            }
+                implementation(libs.kotlinx.datetime)
+                implementation(compose.materialIconsExtended)
+                api("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")}
         }
 
         val androidMain by getting {
             dependencies {
                 implementation("io.ktor:ktor-client-cio:$ktor_version")
                 implementation(libs.sqlite.bundled)
+                implementation("androidx.work:work-runtime-ktx:2.9.0")
 
             }
         }
@@ -66,7 +69,6 @@ kotlin {
             dependencies {
                 implementation("io.ktor:ktor-client-cio:$ktor_version")
                 implementation(libs.sqlite.bundled)
-
             }
         }
 
