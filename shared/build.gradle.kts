@@ -95,7 +95,6 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation("io.ktor:ktor-client-core:${ktor_version}")
-            implementation("io.ktor:ktor-client-cio:${ktor_version}")
 
         }
         commonTest.dependencies {

@@ -1,5 +1,6 @@
 package com.example.sicenet_kmpv2.data.repository
 
+import com.example.sicenet_kmpv2.data.local.SicenetDao
 import com.example.sicenet_kmpv2.domain.PerfilAcademico
 import com.example.sicenet_kmpv2.domain.parsearPerfilXml
 import io.ktor.client.*
