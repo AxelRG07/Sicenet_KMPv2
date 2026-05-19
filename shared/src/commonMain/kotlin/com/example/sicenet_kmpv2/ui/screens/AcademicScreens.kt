@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
@@ -19,6 +20,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,6 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.sicenet_kmpv2.domain.parsearCalifFinalJson
+import com.example.sicenet_kmpv2.domain.parsearCalifUnidadesJson
 import com.example.sicenet_kmpv2.domain.parsearCargaJson
 import com.example.sicenet_kmpv2.domain.parsearKardexJson
 import com.example.sicenet_kmpv2.ui.SicenetViewModel
@@ -147,6 +151,143 @@ fun KardexScreen(viewModel: SicenetViewModel) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             Spacer(modifier = Modifier.height(8.dp))
             Text("Sincronizando...", modifier = Modifier.align(Alignment.CenterHorizontally))
+        }
+    }
+}
+
+@Composable
+fun CalifUnidadesScreen(viewModel: SicenetViewModel) {
+    val califCache by viewModel.califUnidades.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.solicitarCalifUnidades()
+    }
+
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Text("Calificaciones Parciales", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (califCache != null) {
+            Badge(containerColor = MaterialTheme.colorScheme.tertiaryContainer) {
+                Text(
+                    "Última actualización: ${viewModel.formatearFecha(califCache!!.timestampActualizacion)}",
+                    modifier = Modifier.padding(4.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+
+            val listaParciales = parsearCalifUnidadesJson(califCache!!.contenidoXml)
+
+            if (listaParciales.isEmpty()) {
+                Text("No se encontraron calificaciones parciales.")
+            } else {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(listaParciales) { materia ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+                                Text(materia.materia, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    items(materia.calificaciones.entries.toList()) { (unidad, calificacion) ->
+                                        Surface(
+                                            color = MaterialTheme.colorScheme.secondaryContainer,
+                                            shape = MaterialTheme.shapes.small
+                                        ) {
+                                            Column(
+                                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Text(unidad, style = MaterialTheme.typography.labelSmall)
+                                                Text(
+                                                    text = calificacion,
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = if ((calificacion.toIntOrNull() ?: 0) >= 70)
+                                                        MaterialTheme.colorScheme.primary
+                                                    else
+                                                        MaterialTheme.colorScheme.error
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Sincronizando...", modifier = Modifier.align(Alignment.CenterHorizontally))
+        }
+    }
+}
+
+@Composable
+fun CalifFinalScreen(viewModel: SicenetViewModel) {
+    val finalCache by viewModel.califFinal.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.solicitarCalifFinal(1)
+    }
+
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Text("Calificaciones Finales", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (finalCache != null) {
+            Badge(containerColor = MaterialTheme.colorScheme.primaryContainer) {
+                Text(
+                    "Última actualización: ${viewModel.formatearFecha(finalCache!!.timestampActualizacion)}",
+                    modifier = Modifier.padding(4.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+
+            val listaFinales = parsearCalifFinalJson(finalCache!!.contenidoXml)
+
+            if (listaFinales.isEmpty()) {
+                Text("No se encontraron calificaciones finales registradas.")
+            } else {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(listaFinales) { materia ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = materia.materia,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Text(
+                                    text = materia.calificacionFinal,
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if ((materia.calificacionFinal.toIntOrNull() ?: 0) >= 70)
+                                        MaterialTheme.colorScheme.primary
+                                    else
+                                        MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
         }
     }
 }

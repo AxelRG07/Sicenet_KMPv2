@@ -20,12 +20,24 @@ class SicenetViewModel : ViewModel() {
     private val _kardex = MutableStateFlow<CacheAcademicoEntity?>(null)
     val kardex: StateFlow<CacheAcademicoEntity?> = _kardex.asStateFlow()
 
+    private val _califUnidades = MutableStateFlow<CacheAcademicoEntity?>(null)
+    val califUnidades: StateFlow<CacheAcademicoEntity?> = _califUnidades.asStateFlow()
+
+    private val _califFinal = MutableStateFlow<CacheAcademicoEntity?>(null)
+    val califFinal: StateFlow<CacheAcademicoEntity?> = _califFinal.asStateFlow()
+
     init {
         viewModelScope.launch {
             dao.observarCache("carga_academica").collect { _cargaAcademica.value = it }
         }
         viewModelScope.launch {
             dao.observarCache("kardex").collect { _kardex.value = it }
+        }
+        viewModelScope.launch {
+            dao.observarCache("calif_unidades").collect { _califUnidades.value = it }
+        }
+        viewModelScope.launch {
+            dao.observarCache("calif_final").collect { _califFinal.value = it }
         }
     }
 
@@ -40,4 +52,11 @@ class SicenetViewModel : ViewModel() {
     fun formatearFecha(timestamp: Long): String {
         return formatearFechaNativa(timestamp)
     }
+
+    fun solicitarCalifUnidades() {
+        syncManager.sincronizarDato("calif_unidades")
+    }
+
+    fun solicitarCalifFinal(modEducativo: Int) = syncManager.sincronizarDato("calif_final", modEducativo)
+
 }

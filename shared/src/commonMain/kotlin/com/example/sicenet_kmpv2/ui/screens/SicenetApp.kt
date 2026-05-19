@@ -3,6 +3,7 @@ package com.example.sicenet_kmpv2.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
@@ -56,6 +57,20 @@ fun MainDashboard(viewModel: SicenetViewModel = SicenetViewModel()) {
                     selected = pantallaActual == "kardex",
                     onClick = { pantallaActual = "kardex" }
                 )
+
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.List, contentDescription = "Parciales") }, // Usa un ícono que te guste
+                    label = { Text("Parciales") },
+                    selected = pantallaActual == "parciales",
+                    onClick = { pantallaActual = "parciales" }
+                )
+
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.CheckCircle, contentDescription = "Finales") },
+                    label = { Text("Finales") },
+                    selected = pantallaActual == "finales",
+                    onClick = { pantallaActual = "finales" }
+                )
             }
         }
     ) { paddingValues ->
@@ -64,6 +79,8 @@ fun MainDashboard(viewModel: SicenetViewModel = SicenetViewModel()) {
                 "perfil" -> ProfileScreen(AppContainer.repository)
                 "carga" -> CargaAcademicaScreen(viewModel)
                 "kardex" -> KardexScreen(viewModel)
+                "parciales" -> CalifUnidadesScreen(viewModel)
+                "finales" -> CalifFinalScreen(viewModel)
             }
         }
     }

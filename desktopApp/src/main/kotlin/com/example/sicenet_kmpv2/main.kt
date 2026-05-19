@@ -23,14 +23,21 @@ class DesktopSyncManager : SyncManager {
             val response = when(idDato) {
                 "carga_academica" -> repo.obtenerCargaAcademica()
                 "kardex" -> repo.obtenerKardex(parametroExtra ?: 0)
+                "calif_unidades" -> repo.obtenerCalifUnidades()
+                "calif_final" -> repo.obtenerCalifFinales(parametroExtra ?: 0)
                 else -> null
             }
 
             response?.getOrNull()?.let { xml ->
+
+                val cleanJson = if (idDato != "perfil") {
+                    xml.substringAfter("Result>").substringBefore("</")
+                } else xml
+
                 dao.guardarCache(
                     CacheAcademicoEntity(
                         idDato = idDato,
-                        contenidoXml = xml,
+                        contenidoXml = cleanJson,
                         timestampActualizacion = Clock.System.now().toEpochMilliseconds()
                     )
                 )
