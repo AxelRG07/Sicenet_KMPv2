@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.example.sicenet_kmpv2.data.local.SicenetDatabase
+import com.example.sicenet_kmpv2.domain.AndroidSessionManager
 import com.example.sicenet_kmpv2.ui.screens.SicenetApp
 
 class MainActivity : ComponentActivity() {
@@ -20,11 +21,12 @@ class MainActivity : ComponentActivity() {
         ).setDriver(BundledSQLiteDriver())
 
         val syncManager = AndroidSyncManager(appContext)
+        val sessionManager = AndroidSessionManager(appContext)
 
-        AppContainer.inicializar(db, syncManager)
+        AppContainer.inicializar(db, syncManager, sessionManager)
 
         setContent {
-            SicenetApp(repository = AppContainer.repository)
+            SicenetApp()
         }
     }
 }

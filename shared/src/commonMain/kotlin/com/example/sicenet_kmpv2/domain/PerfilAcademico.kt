@@ -9,23 +9,15 @@ data class PerfilAcademico(
     val creditosAcumulados: String
 )
 
-fun parsearPerfilXml(xml: String): PerfilAcademico {
-    val jsonCrudo = xml.substringAfter("<getAlumnoAcademicoWithLineamientoResult>")
-        .substringBefore("</getAlumnoAcademicoWithLineamientoResult>")
+fun parsearPerfilJson(jsonStr: String): PerfilAcademico? {
+    if (jsonStr.isBlank() || !jsonStr.contains("{")) return null
 
-    val nombre = "\"nombre\":\"(.*?)\"".toRegex().find(jsonCrudo)?.groupValues?.get(1) ?: "Desconocido"
-    val matricula = "\"matricula\":\"(.*?)\"".toRegex().find(jsonCrudo)?.groupValues?.get(1) ?: "Sin Matrícula"
-    val carrera = "\"carrera\":\"(.*?)\"".toRegex().find(jsonCrudo)?.groupValues?.get(1) ?: "Desconocida"
-    val especialidad = "\"especialidad\":\"(.*?)\"".toRegex().find(jsonCrudo)?.groupValues?.get(1) ?: "N/A"
-    val semestre = "\"semActual\":(\\d+)".toRegex().find(jsonCrudo)?.groupValues?.get(1) ?: "0"
-    val creditos = "\"cdtosAcumulados\":(\\d+)".toRegex().find(jsonCrudo)?.groupValues?.get(1) ?: "0"
+    val nombre = "\"(?i)nombre\"\\s*:\\s*\"([^\"]+)\"".toRegex().find(jsonStr)?.groupValues?.get(1) ?: "Desconocido"
+    val matricula = "\"(?i)matricula\"\\s*:\\s*\"([^\"]+)\"".toRegex().find(jsonStr)?.groupValues?.get(1) ?: "Sin Matrícula"
+    val carrera = "\"(?i)carrera\"\\s*:\\s*\"([^\"]+)\"".toRegex().find(jsonStr)?.groupValues?.get(1) ?: "Desconocida"
+    val especialidad = "\"(?i)especialidad\"\\s*:\\s*\"([^\"]+)\"".toRegex().find(jsonStr)?.groupValues?.get(1) ?: "N/A"
+    val semestre = "\"(?i)semActual\"\\s*:\\s*(\\d+)".toRegex().find(jsonStr)?.groupValues?.get(1) ?: "0"
+    val creditos = "\"(?i)cdtosAcumulados\"\\s*:\\s*(\\d+)".toRegex().find(jsonStr)?.groupValues?.get(1) ?: "0"
 
-    return PerfilAcademico(
-        nombre = nombre,
-        matricula = matricula,
-        carrera = carrera,
-        especialidad = especialidad,
-        semestre = semestre,
-        creditosAcumulados = creditos
-    )
+    return PerfilAcademico(nombre, matricula, carrera, especialidad, semestre, creditos)
 }

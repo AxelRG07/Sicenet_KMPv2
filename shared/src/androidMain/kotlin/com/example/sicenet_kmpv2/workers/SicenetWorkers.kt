@@ -18,7 +18,7 @@ class FetchWorker(appContext: Context, workerParams: WorkerParameters) : Corouti
         val repo = AppContainer.repository
 
         val responseResult = when (idDato) {
-            "perfil" -> repo.obtenerPerfil().map { "Perfil" }
+            "perfil" -> repo.obtenerPerfil()
             "carga_academica" -> repo.obtenerCargaAcademica()
             "calif_unidades" -> repo.obtenerCalifUnidades()
             "kardex" -> repo.obtenerKardex(parametroExtra)
@@ -29,9 +29,7 @@ class FetchWorker(appContext: Context, workerParams: WorkerParameters) : Corouti
         if (responseResult.isSuccess) {
             val rawXml = responseResult.getOrNull() ?: ""
 
-            val cleanJson = if (idDato != "perfil") {
-                rawXml.substringAfter("Result>").substringBefore("</")
-            } else rawXml
+            val cleanJson = rawXml.substringAfter("Result>").substringBefore("</")
 
             val tempFile = File(applicationContext.cacheDir, "${idDato}_temp.txt")
             tempFile.writeText(cleanJson)

@@ -3,6 +3,7 @@ package com.example.sicenet_kmpv2.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.sicenet_kmpv2.AppContainer
+import com.example.sicenet_kmpv2.AppContainer.sessionManager
 import com.example.sicenet_kmpv2.data.local.CacheAcademicoEntity
 import com.example.sicenet_kmpv2.utils.formatearFechaNativa
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +14,9 @@ import kotlinx.coroutines.launch
 class SicenetViewModel : ViewModel() {
     private val dao = AppContainer.database.sicenetDao()
     private val syncManager = AppContainer.syncManager
+
+    private val _perfil = MutableStateFlow<CacheAcademicoEntity?>(null)
+    val perfil: StateFlow<CacheAcademicoEntity?> = _perfil.asStateFlow()
 
     private val _cargaAcademica = MutableStateFlow<CacheAcademicoEntity?>(null)
     val cargaAcademica: StateFlow<CacheAcademicoEntity?> = _cargaAcademica.asStateFlow()
@@ -27,6 +31,7 @@ class SicenetViewModel : ViewModel() {
     val califFinal: StateFlow<CacheAcademicoEntity?> = _califFinal.asStateFlow()
 
     init {
+        viewModelScope.launch { dao.observarCache("perfil").collect { _perfil.value = it } }
         viewModelScope.launch {
             dao.observarCache("carga_academica").collect { _cargaAcademica.value = it }
         }
@@ -41,6 +46,7 @@ class SicenetViewModel : ViewModel() {
         }
     }
 
+    fun solicitarPerfil() = syncManager.sincronizarDato("perfil")
     fun solicitarCargaAcademica() {
         syncManager.sincronizarDato("carga_academica")
     }
@@ -58,5 +64,19 @@ class SicenetViewModel : ViewModel() {
     }
 
     fun solicitarCalifFinal(modEducativo: Int) = syncManager.sincronizarDato("calif_final", modEducativo)
+
+    fun cerrarSesion(onLogoutFinished: () -> Unit) {
+        viewModelScope.launch {
+            sessionManager.cerrarSesion()
+
+            AppContainer.repository.limpiarCookieSesion()
+
+            dao.vaciarCacheCompleto()
+
+            AppContainer.limpiarRed()
+
+            onLogoutFinished()
+        }
+    }
 
 }

@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,27 +17,97 @@ import androidx.compose.ui.unit.dp
 import com.example.sicenet_kmpv2.AppContainer
 import com.example.sicenet_kmpv2.data.repository.SicenetRepository
 import com.example.sicenet_kmpv2.domain.PerfilAcademico
+import com.example.sicenet_kmpv2.domain.parsearPerfilJson
 import com.example.sicenet_kmpv2.ui.SicenetViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-fun SicenetApp(repository: SicenetRepository) {
-    var isAuthenticated by remember { mutableStateOf(false) }
+fun SicenetApp() {
+    val sessionManager = AppContainer.sessionManager
 
-    if (!isAuthenticated) {
-        LoginScreen(repository) {
+    var isAuthenticated by remember { mutableStateOf(sessionManager.esSesionActiva()) }
+
+    var isRestoringSession by remember { mutableStateOf(sessionManager.esSesionActiva()) }
+
+    LaunchedEffect(Unit) {
+        if (sessionManager.esSesionActiva()) {
+            kotlinx.coroutines.delay(1000)
+
+            val matricula = sessionManager.obtenerMatricula()?.trim() ?: ""
+            val contra = sessionManager.obtenerContrasenia()?.trim() ?: ""
+
+            if (matricula.isEmpty() || contra.isEmpty()) {
+                sessionManager.cerrarSesion()
+                isAuthenticated = false
+                isRestoringSession = false
+                return@LaunchedEffect
+            }
+
+            var intentos = 0
+            var exito = false
+
+            while (intentos < 2 && !exito) {
+                val result = AppContainer.repository.login(matricula, contra)
+                if (result.isSuccess) {
+                    exito = true
+                } else {
+                    intentos++
+                    kotlinx.coroutines.delay(1000)
+                }
+            }
+
+            if (exito) {
+                isRestoringSession = false
+            } else {
+                sessionManager.cerrarSesion()
+                isAuthenticated = false
+                isRestoringSession = false
+            }
+        }
+    }
+
+    if (isRestoringSession) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Conectando...",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+    } else if (!isAuthenticated) {
+        LoginScreen() { matriculaInsertada, contraseniaInsertada ->
+            sessionManager.guardarSesion(matriculaInsertada, contraseniaInsertada)
             isAuthenticated = true
         }
     } else {
-        MainDashboard()
+        val viewModel = remember { SicenetViewModel() }
+        MainDashboard(viewModel = viewModel) {
+            isAuthenticated = false
+        }
     }
 }
 
 @Composable
-fun MainDashboard(viewModel: SicenetViewModel = SicenetViewModel()) {
+fun MainDashboard(viewModel: SicenetViewModel = SicenetViewModel(), onLogoutSuccess: () -> Unit) {
     var pantallaActual by remember { mutableStateOf("perfil") }
 
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("SICEDroid-KMP", fontWeight = FontWeight.Bold) },
+                actions = {
+                    IconButton(onClick = { viewModel.cerrarSesion(onLogoutSuccess) }) {
+                        Icon(Icons.Default.ExitToApp, contentDescription = "Cerrar Sesión", tint = MaterialTheme.colorScheme.error)
+                    }
+                }
+            )
+        },
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(
@@ -59,7 +130,7 @@ fun MainDashboard(viewModel: SicenetViewModel = SicenetViewModel()) {
                 )
 
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.List, contentDescription = "Parciales") }, // Usa un ícono que te guste
+                    icon = { Icon(Icons.Default.List, contentDescription = "Parciales") },
                     label = { Text("Parciales") },
                     selected = pantallaActual == "parciales",
                     onClick = { pantallaActual = "parciales" }
@@ -76,7 +147,7 @@ fun MainDashboard(viewModel: SicenetViewModel = SicenetViewModel()) {
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
             when (pantallaActual) {
-                "perfil" -> ProfileScreen(AppContainer.repository)
+                "perfil" -> ProfileScreen(viewModel)
                 "carga" -> CargaAcademicaScreen(viewModel)
                 "kardex" -> KardexScreen(viewModel)
                 "parciales" -> CalifUnidadesScreen(viewModel)
@@ -87,7 +158,7 @@ fun MainDashboard(viewModel: SicenetViewModel = SicenetViewModel()) {
 }
 
 @Composable
-fun LoginScreen(repository: SicenetRepository, onLoginSuccess: () -> Unit) {
+fun LoginScreen(onLoginSuccess: (matricula: String, password: String) -> Unit) {
     var matricula by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
@@ -129,12 +200,12 @@ fun LoginScreen(repository: SicenetRepository, onLoginSuccess: () -> Unit) {
                 isLoading = true
                 errorMessage = null
                 coroutineScope.launch {
-                    val result = repository.login(matricula, password)
+                    val result = AppContainer.repository.login(matricula, password)
                     isLoading = false
                     if (result.isSuccess) {
                         val xml = result.getOrNull()
                         println("XML recibido: $xml")
-                        onLoginSuccess()
+                        onLoginSuccess(matricula.trim(), password.trim())
                     } else {
                         val errorReal = result.exceptionOrNull()?.message ?: "Error desconocido"
                         errorMessage = "Error: $errorReal"
@@ -151,36 +222,34 @@ fun LoginScreen(repository: SicenetRepository, onLoginSuccess: () -> Unit) {
 }
 
 @Composable
-fun ProfileScreen(repository: SicenetRepository) {
-    var perfil by remember { mutableStateOf<PerfilAcademico?>(null) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    val coroutineScope = rememberCoroutineScope()
+fun ProfileScreen(viewModel: SicenetViewModel) {
+    val perfilCache by viewModel.perfil.collectAsState()
 
     LaunchedEffect(Unit) {
-        coroutineScope.launch {
-            val result = repository.obtenerPerfil()
-            if (result.isSuccess) {
-                perfil = result.getOrNull()
-            } else {
-                errorMessage = result.exceptionOrNull()?.message ?: "Error desconocido"
-            }
-        }
+        viewModel.solicitarPerfil()
     }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Mi Perfil SICENET", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Text("Mi Perfil", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(24.dp))
 
-        if (errorMessage != null) {
-            Text("Error: $errorMessage", color = MaterialTheme.colorScheme.error)
-        } else if (perfil == null) {
-            CircularProgressIndicator()
+        if (perfilCache != null) {
+            Badge(containerColor = MaterialTheme.colorScheme.tertiaryContainer) {
+                Text(
+                    "Última actualización: ${viewModel.formatearFecha(perfilCache!!.timestampActualizacion)}",
+                    modifier = Modifier.padding(4.dp)
+                )
+            }
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Extrayendo datos académicos...")
-        } else {
+
+            val perfil = parsearPerfilJson(perfilCache!!.contenidoXml)
+
+            if (perfil == null) {
+                Text("Error al procesar el perfil.", color = MaterialTheme.colorScheme.error)
+            } else {
             Card(
                 modifier = Modifier.fillMaxWidth().padding(8.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
@@ -216,4 +285,10 @@ fun ProfileScreen(repository: SicenetRepository) {
                 }
             }
         }
+        else {
+            CircularProgressIndicator()
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Sincronizando...")
+        }
     }
+}

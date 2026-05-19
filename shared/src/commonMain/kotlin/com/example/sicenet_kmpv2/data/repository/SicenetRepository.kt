@@ -1,12 +1,13 @@
 package com.example.sicenet_kmpv2.data.repository
 
-import com.example.sicenet_kmpv2.data.local.SicenetDao
-import com.example.sicenet_kmpv2.domain.PerfilAcademico
-import com.example.sicenet_kmpv2.domain.parsearPerfilXml
-import io.ktor.client.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
+import io.ktor.client.HttpClient
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 
 class SicenetRepository(private val client: HttpClient) {
 
@@ -63,7 +64,7 @@ class SicenetRepository(private val client: HttpClient) {
         }
     }
 
-    suspend fun obtenerPerfil(): Result<PerfilAcademico> {
+    suspend fun obtenerPerfil(): Result<String> {
         val requestBody = """
             <?xml version="1.0" encoding="utf-8"?>
             <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
@@ -72,30 +73,7 @@ class SicenetRepository(private val client: HttpClient) {
               </soap:Body>
             </soap:Envelope>
         """.trimIndent()
-
-        return try {
-            val response: HttpResponse = client.post(baseUrl) {
-                contentType(ContentType.parse("text/xml; charset=utf-8"))
-                header("SOAPAction", "\"http://tempuri.org/getAlumnoAcademicoWithLineamiento\"")
-
-                if (sessionCookie != null) {
-                    header("Cookie", sessionCookie)
-                }
-
-                setBody(requestBody)
-            }
-
-            val responseText = response.bodyAsText()
-
-            if (responseText.contains("soap:Fault")) {
-                Result.failure(Exception("Error de SOAP en Perfil"))
-            } else {
-                val perfil = parsearPerfilXml(responseText)
-                Result.success(perfil)
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        return ejecutarPeticionSoap("getAlumnoAcademicoWithLineamiento", requestBody)
     }
 
     // 1. CARGA ACADÉMICA
@@ -172,6 +150,10 @@ class SicenetRepository(private val client: HttpClient) {
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    fun limpiarCookieSesion() {
+        sessionCookie = null
     }
 
 }

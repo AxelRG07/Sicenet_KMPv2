@@ -20,6 +20,9 @@ interface SicenetDao {
 
     @Query("SELECT * FROM cache_academico WHERE idDato = :idDato")
     suspend fun obtenerCacheSync(idDato: String): CacheAcademicoEntity?
+
+    @Query("DELETE FROM cache_academico")
+    suspend fun vaciarCacheCompleto()
 }
 
 @Database(entities = [CacheAcademicoEntity::class], version = 1)

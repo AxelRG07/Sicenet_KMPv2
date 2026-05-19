@@ -6,6 +6,7 @@ import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.example.sicenet_kmpv2.data.local.SicenetDatabase
 import com.example.sicenet_kmpv2.data.local.CacheAcademicoEntity
+import com.example.sicenet_kmpv2.domain.DesktopSessionManager
 import com.example.sicenet_kmpv2.domain.SyncManager
 import com.example.sicenet_kmpv2.ui.screens.SicenetApp
 import kotlinx.coroutines.CoroutineScope
@@ -21,6 +22,7 @@ class DesktopSyncManager : SyncManager {
             val dao = AppContainer.database.sicenetDao()
 
             val response = when(idDato) {
+                "perfil" -> repo.obtenerPerfil()
                 "carga_academica" -> repo.obtenerCargaAcademica()
                 "kardex" -> repo.obtenerKardex(parametroExtra ?: 0)
                 "calif_unidades" -> repo.obtenerCalifUnidades()
@@ -30,9 +32,7 @@ class DesktopSyncManager : SyncManager {
 
             response?.getOrNull()?.let { xml ->
 
-                val cleanJson = if (idDato != "perfil") {
-                    xml.substringAfter("Result>").substringBefore("</")
-                } else xml
+                val cleanJson = xml.substringAfter("Result>").substringBefore("</")
 
                 dao.guardarCache(
                     CacheAcademicoEntity(
@@ -53,10 +53,11 @@ fun main() = application {
     ).setDriver(BundledSQLiteDriver())
 
     val syncManager = DesktopSyncManager()
+    val sessionManager = DesktopSessionManager()
 
-    AppContainer.inicializar(db, syncManager)
+    AppContainer.inicializar(db, syncManager, sessionManager)
 
     Window(onCloseRequest = ::exitApplication, title = "SICEDroid") {
-        SicenetApp(repository = AppContainer.repository)
+        SicenetApp()
     }
 }
