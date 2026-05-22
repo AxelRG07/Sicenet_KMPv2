@@ -47,7 +47,7 @@ class SicenetViewModel : ViewModel() {
     }
 
     fun solicitarPerfil() = syncManager.sincronizarDato("perfil")
-    fun solicitarCargaAcademica() {
+    fun solicitarCargaAcademica(forzarRefresco: Boolean = false) {
         syncManager.sincronizarDato("carga_academica")
     }
 
@@ -76,6 +76,20 @@ class SicenetViewModel : ViewModel() {
             AppContainer.limpiarRed()
 
             onLogoutFinished()
+        }
+    }
+
+    fun precargarDatos() {
+        viewModelScope.launch {
+            if (_perfil.value == null) solicitarPerfil()
+
+            if (_cargaAcademica.value == null) solicitarCargaAcademica()
+
+            if (_kardex.value == null) solicitarKardex(3)
+
+            if (_califUnidades.value == null) solicitarCalifUnidades()
+
+            if (_califFinal.value == null) solicitarCalifFinal(1)
         }
     }
 

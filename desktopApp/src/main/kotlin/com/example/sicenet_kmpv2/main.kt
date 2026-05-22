@@ -21,6 +21,7 @@ class DesktopSyncManager : SyncManager {
             val repo = AppContainer.repository
             val dao = AppContainer.database.sicenetDao()
 
+            //verificamos el valor de idDato para saber que consultar al servidor
             val response = when(idDato) {
                 "perfil" -> repo.obtenerPerfil()
                 "carga_academica" -> repo.obtenerCargaAcademica()
@@ -32,8 +33,10 @@ class DesktopSyncManager : SyncManager {
 
             response?.getOrNull()?.let { xml ->
 
+                //extraemos el xml con los datos
                 val cleanJson = xml.substringAfter("Result>").substringBefore("</")
 
+                //guardamos la clave(perfil,kardex o cualquier otro) y el json con los datos
                 dao.guardarCache(
                     CacheAcademicoEntity(
                         idDato = idDato,

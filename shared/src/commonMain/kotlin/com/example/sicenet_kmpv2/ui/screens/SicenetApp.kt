@@ -15,8 +15,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.sicenet_kmpv2.AppContainer
-import com.example.sicenet_kmpv2.data.repository.SicenetRepository
-import com.example.sicenet_kmpv2.domain.PerfilAcademico
 import com.example.sicenet_kmpv2.domain.parsearPerfilJson
 import com.example.sicenet_kmpv2.ui.SicenetViewModel
 import kotlinx.coroutines.launch
@@ -31,7 +29,6 @@ fun SicenetApp() {
 
     LaunchedEffect(Unit) {
         if (sessionManager.esSesionActiva()) {
-            kotlinx.coroutines.delay(1000)
 
             val matricula = sessionManager.obtenerMatricula()?.trim() ?: ""
             val contra = sessionManager.obtenerContrasenia()?.trim() ?: ""
@@ -52,17 +49,11 @@ fun SicenetApp() {
                     exito = true
                 } else {
                     intentos++
-                    kotlinx.coroutines.delay(1000)
+                    if (intentos < 2) kotlinx.coroutines.delay(500)
                 }
             }
 
-            if (exito) {
-                isRestoringSession = false
-            } else {
-                sessionManager.cerrarSesion()
-                isAuthenticated = false
-                isRestoringSession = false
-            }
+            isRestoringSession = false
         }
     }
 
@@ -226,7 +217,7 @@ fun ProfileScreen(viewModel: SicenetViewModel) {
     val perfilCache by viewModel.perfil.collectAsState()
 
     LaunchedEffect(Unit) {
-        viewModel.solicitarPerfil()
+        viewModel.precargarDatos()
     }
 
     Column(
